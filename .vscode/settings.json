@@ -1,0 +1,8 @@
+{
+    "fiveServer.highlight": false,
+    "fiveServer.injectBody": true,
+    "fiveServer.navigate": true,
+    "fiveServer.browser":  [
+    "Google Chrome","Microsoft Edge", "Firefox Developer Edition"
+    ]
+}
