@@ -1,132 +1,131 @@
 let clutter = [];
 let cluttereditid = null;
 
-document.addEventListener("DOMContentLoaded", (event) => {
-  const dialog = document.querySelector(".dialog-form");
-  let btns = document.querySelectorAll(".card-add-btn");
-  let card = document.querySelectorAll(".card");
-  const cardAddBtn = document.querySelector(".card-add-btn");
+const dialog = document.querySelector(".dialog-form");
+let btns = document.querySelectorAll(".card-add-btn");
+let card = document.querySelectorAll(".card");
+const cardAddBtn = document.querySelector(".card-add-btn");
 
-  const clutterform = document.querySelector("#clutterform");
-  const cluttersearch = document.querySelector("#searchform");
-  const clutterclrsearch = document.querySelector(".search-clear-btn");
-  const dialogcloseBtn = document.querySelector(".dialog-close-btn");
-  const dialogcancelBtn = document.querySelector(".dialog-cancel-btn");
+const clutterform = document.querySelector("#clutterform");
+const cluttersearch = document.querySelector("#searchform");
+const clutterclrsearch = document.querySelector(".search-clear-btn");
+const dialogcloseBtn = document.querySelector(".dialog-close-btn");
+const dialogcancelBtn = document.querySelector(".dialog-cancel-btn");
 
-  function generateID() {
-    let clutterID = Date.now().toString();
-    return clutterID;
-  }
-  
-  function loadClutter() {
-    storedClutter = localStorage.getItem("ClutterPad");
-    return storedClutter ? JSON.parse(storedClutter) : [];
-  }
+function generateID() {
+  let clutterID = Date.now().toString();
+  return clutterID;
+}
 
-  function timeStamp() {
-    let currentDate = new Date();
-    let lastedited = "";
-    let currentYear = currentDate.getFullYear();
-    let currentMonth = currentDate.getMonth().toString();
-    let currentDay = currentDate.getDate().toString();
-    let currentHours = currentDate.getHours().toString();
-    let currentMinutes = currentDate.getMinutes().toString();
-    let currentSeconds = currentDate.getSeconds().toString();
-    lastedited =
-      currentDay.padStart(2, "0") +
-      "/" +
-      currentMonth.padStart(2, "0") +
-      "/" +
-      currentYear +
-      " | " +
-      currentHours.padStart(2, "0") +
-      ":" +
-      currentMinutes.padStart(2, "0") +
-      ":" +
-      currentSeconds.padStart(2, "0");
-    return lastedited.toString();
-  }
+function loadClutter() {
+  storedClutter = localStorage.getItem("ClutterPad");
+  return storedClutter ? JSON.parse(storedClutter) : [];
+}
 
-  function addClutter(event) {
-    event.preventDefault();
-    saveClutter();
+function timeStamp() {
+  let currentDate = new Date();
+  let lastedited = "";
+  let currentYear = currentDate.getFullYear();
+  let currentMonth = currentDate.getMonth().toString();
+  let currentDay = currentDate.getDate().toString();
+  let currentHours = currentDate.getHours().toString();
+  let currentMinutes = currentDate.getMinutes().toString();
+  let currentSeconds = currentDate.getSeconds().toString();
+  lastedited =
+    currentDay.padStart(2, "0") +
+    "/" +
+    currentMonth.padStart(2, "0") +
+    "/" +
+    currentYear +
+    " | " +
+    currentHours.padStart(2, "0") +
+    ":" +
+    currentMinutes.padStart(2, "0") +
+    ":" +
+    currentSeconds.padStart(2, "0");
+  return lastedited.toString();
+}
+
+function addClutter(event) {
+  event.preventDefault();
+  saveClutter();
+  storeClutter();
+  updateClutter();
+  dialog.close();
+}
+
+function saveClutter() {
+  const clutterID = generateID();
+  const clutterTitle = document.querySelector("#clutter-title").value.trim();
+  const clutterContent = document
+    .querySelector("#clutter-text-content")
+    .value.trim();
+  const clutterTimeStamp = timeStamp();
+  clearDialog();
+
+  if (cluttereditid) {
+    const clutterindex = clutter.findIndex(
+      (clutter) => clutter.id === cluttereditid
+    );
+    clutter[clutterindex] = {
+      ...clutter[clutterindex],
+      title: clutterTitle,
+      content: clutterContent,
+      timestamp: timeStamp()
+    };
+
     storeClutter();
+    cluttereditid = null;
     updateClutter();
-    dialog.close();
+  } else {
+    clutter.unshift({
+      id: clutterID,
+      title: clutterTitle,
+      content: clutterContent,
+      timestamp: timeStamp()
+    });
+  }
+}
+
+function storeClutter() {
+  localStorage.setItem("ClutterPad", JSON.stringify(clutter));
+}
+
+function editCard(clutterid = 0) {
+  const cluttered = clutter.find((clutter) => clutter.id === clutterid);
+  cluttereditid = clutterid;
+  if (clutterid) {
+    let cluttertitle = document.getElementById("clutter-title");
+    let cluttercontent = document.getElementById("clutter-text-content");
+    document.getElementById("dialog-btn").textContent = "Update Clutter";
+    cluttertitle.value = cluttered.title;
+    cluttercontent.value = cluttered.content;
+    dialog.showModal();
+  }
+}
+
+function deleteClutter(clutterid = 0) {
+  clutter = clutter.filter((clutter) => clutter.id != clutterid);
+  storeClutter();
+  updateClutter();
+}
+
+
+function searchClutter(event) {
+  event.preventDefault();
+  const searchtext = document.querySelector(".search-input").value.trim().toLowerCase();
+  clutterSearch = clutter.filter(clutter => clutter.content.toLowerCase().includes(searchtext));
+  updateClutter(clutterSearch, true);
+}
+
+function updateClutter(clutterentries = clutter, searchbool = false) {
+  const cards = document.querySelector(".cards");
+  if (clutterentries.length == 0 && searchbool === true) {
+    return;
   }
 
-  function saveClutter() {
-    const clutterID = generateID();
-    const clutterTitle = document.querySelector("#clutter-title").value.trim();
-    const clutterContent = document
-      .querySelector("#clutter-text-content")
-      .value.trim();
-    const clutterTimeStamp = timeStamp();
-    clearDialog();
-
-    if (cluttereditid) {
-      const clutterindex = clutter.findIndex(
-        (clutter) => clutter.id === cluttereditid
-      );
-      clutter[clutterindex] = {
-        ...clutter[clutterindex],
-        title: clutterTitle,
-        content: clutterContent,
-        timestamp: timeStamp()
-      };
-
-      storeClutter();
-      cluttereditid = null;
-      updateClutter();
-    } else {
-      clutter.unshift({
-        id: clutterID,
-        title: clutterTitle,
-        content: clutterContent,
-        timestamp: timeStamp()
-      });
-    }
-  }
-
-  function storeClutter() {
-    localStorage.setItem("ClutterPad", JSON.stringify(clutter));
-  }
-
-  function editCard(clutterid = 0) {
-    const cluttered = clutter.find((clutter) => clutter.id === clutterid);
-    cluttereditid = clutterid;
-    if (clutterid) {
-      let cluttertitle = document.getElementById("clutter-title");
-      let cluttercontent = document.getElementById("clutter-text-content");
-      document.getElementById("dialog-btn").textContent = "Update Clutter";
-      cluttertitle.value = cluttered.title;
-      cluttercontent.value = cluttered.content;
-      dialog.showModal();
-    }
-  }
-
-  function deleteClutter(clutterid = 0) {
-    clutter = clutter.filter((clutter) => clutter.id != clutterid);
-    storeClutter();
-    updateClutter();
-  }
-
-  
-  function searchClutter(event) {
-    event.preventDefault();
-    const searchtext = document.querySelector(".search-input").value.trim().toLowerCase();
-    clutterSearch = clutter.filter(clutter => clutter.content.toLowerCase().includes(searchtext));
-    updateClutter(clutterSearch, true);
-  }
-  
-  function updateClutter(clutterentries = clutter, searchbool = false) {
-    const cards = document.querySelector(".cards");
-    if (clutterentries.length == 0 && searchbool === true) {
-      return;
-    }
-    
-    if (clutter.length === 0) {
-      clutter.innerHTML = `
+  if (clutter.length === 0) {
+    cards.innerHTML = `
       <article class="card">
       <div class="card-title">
       <h3 class="card-title-text">Can't find any clutter...</h3>
@@ -141,10 +140,10 @@ document.addEventListener("DOMContentLoaded", (event) => {
   </button>
     </div>
   </article>`;
-      return;
-    }
-    
-    cards.innerHTML = clutterentries.map((card) => `
+    return;
+  }
+
+  cards.innerHTML = clutterentries.map((card) => `
       <article class="card" id="${card.id}" data-id="${card.id}">
     <div class="card-title">
       <h3 class="card-title-text">${card.title}</h3>
@@ -173,79 +172,78 @@ document.addEventListener("DOMContentLoaded", (event) => {
     </div>
   </article>
     `
-      )
-      .join("");
-    cardEvents();
-    return;
-  }
+  )
+    .join("");
+  cardEvents();
+  return;
+}
 
-  function updateBtns() {
-    btns = document.querySelectorAll(".card-add-btn");
-    btns.forEach(function (element, index) {
-      element.addEventListener("click", (event) => {
-        dialog.showModal();
-        document.getElementById("clutter-title").focus();
-      });
+function updateBtns() {
+  btns = document.querySelectorAll(".card-add-btn");
+  btns.forEach(function (element, index) {
+    element.addEventListener("click", (event) => {
+      dialog.showModal();
+      document.getElementById("clutter-title").focus();
     });
-  }
+  });
+}
 
-  function cardEvents() {
-    card = document.querySelectorAll(".card");
-    card.forEach((cardBtn) => {
-      cardBtn.addEventListener("click", (event) => {
-        // Edit Card
-        if (event.target.parentNode.classList.contains("card-edit")) {
-          editCard(cardBtn.getAttribute("data-id"));
-        }
+function cardEvents() {
+  card = document.querySelectorAll(".card");
+  card.forEach((cardBtn) => {
+    cardBtn.addEventListener("click", (event) => {
+      // Edit Card
+      if (event.target.parentNode.classList.contains("card-edit")) {
+        editCard(cardBtn.getAttribute("data-id"));
+      }
 
-        // Delete Card
-        if (event.target.parentNode.classList.contains("card-delete")) {
-          let prompt = "Are you sure you want to delete this Clutter?\nEither OK or Cancel.";
-          if (confirm(prompt) === true) {
-            deleteClutter(cardBtn.getAttribute("data-id"));
-          }
+      // Delete Card
+      if (event.target.parentNode.classList.contains("card-delete")) {
+        let prompt = "Are you sure you want to delete this Clutter?\nEither OK or Cancel.";
+        if (confirm(prompt) === true) {
+          deleteClutter(cardBtn.getAttribute("data-id"));
         }
-      });
+      }
     });
-  }
-
-  function clearDialog() {
-    let cluttertitle = document.querySelector("#clutter-title");
-    let cluttercontent = document.querySelector("#clutter-text-content");
-    cluttertitle.value = "";
-    cluttercontent.value = "";
-    document.getElementById("dialog-btn").textContent = "Add Clutter";
-  }
-
-  clutterform.addEventListener("submit", addClutter);
-  
-  cluttersearch.addEventListener("submit", searchClutter);
-  
-  clutterclrsearch.addEventListener("click", (event)=>{
-    const searchinput = document.querySelector("#search-input");
-    searchinput.value = "";
-    updateClutter();
-    updateBtns();
   });
-  
-  dialogcloseBtn.addEventListener("click", (event) => {
-    clearDialog();
-    dialog.close();
-  });
+}
 
-  dialogcancelBtn.addEventListener("click", (event) => {
-    clearDialog();
-    dialog.close();
-  });
+function clearDialog() {
+  let cluttertitle = document.querySelector("#clutter-title");
+  let cluttercontent = document.querySelector("#clutter-text-content");
+  cluttertitle.value = "";
+  cluttercontent.value = "";
+  document.getElementById("dialog-btn").textContent = "Add Clutter";
+}
 
-  dialog.addEventListener("click", function (event) {
-    if (event.target === this) {
-      clearDialog();
-      dialog.close();
-    }
-  });
+clutterform.addEventListener("submit", addClutter);
 
-  clutter = loadClutter();
+cluttersearch.addEventListener("submit", searchClutter);
+
+clutterclrsearch.addEventListener("click", (event) => {
+  const searchinput = document.querySelector("#search-input");
+  searchinput.value = "";
   updateClutter();
   updateBtns();
 });
+
+dialogcloseBtn.addEventListener("click", (event) => {
+  clearDialog();
+  dialog.close();
+});
+
+dialogcancelBtn.addEventListener("click", (event) => {
+  clearDialog();
+  dialog.close();
+});
+
+dialog.addEventListener("click", function (event) {
+  if (event.target === this) {
+    clearDialog();
+    dialog.close();
+  }
+});
+
+clutter = loadClutter();
+updateClutter();
+updateBtns();
